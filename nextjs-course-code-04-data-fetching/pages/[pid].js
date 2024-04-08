@@ -4,6 +4,12 @@ import path from "path";
 
 function productDetailPage(props) {
   const { loadedProduct } = props;
+
+  // dynamic pre-rendering fallback. when fallback=blocking it's not needed but page takes longer loading time
+  // if (!loadedProduct) {
+  //   return <p>Loading...</p>;
+  // }
+
   return (
     <fragment>
       <h1>{loadedProduct.title}</h1>
@@ -12,14 +18,18 @@ function productDetailPage(props) {
   );
 }
 
-export async function getStaticProps(context) {
-  const { params } = context;
-  const productId = params.pid;
+async function getData() {
   // load dummy-backend.json data without fetching on CS
   const filePath = path.join(process.cwd(), "data", "dummy-backend.json");
   const jsonData = await fs.readFile(filePath);
   const data = JSON.parse(jsonData);
+  return data;
+}
 
+export async function getStaticProps(context) {
+  const { params } = context;
+  const productId = params.pid;
+  const data = await getData();
   const product = data.products.find((product) => product.id === productId);
 
   return {
@@ -29,26 +39,15 @@ export async function getStaticProps(context) {
   };
 }
 
+// dynamic pre-rendering
 export async function getStaticPaths() {
+  const data = await getData();
+  const ids = data.products.map((product) => product.id);
+  const pathWithParams = ids.map((id) => ({ params: { pid: id } }));
   return {
-    paths: [
-      {
-        params: {
-          pid: "p1",
-        },
-      },
-      {
-        params: {
-          pid: "p2",
-        },
-      },
-      {
-        params: {
-          pid: "p3",
-        },
-      },
-    ],
-    fallback: false,
+    paths: pathWithParams,
+    // fallback: true,
+    fallback: "blocking",
   };
 }
 
