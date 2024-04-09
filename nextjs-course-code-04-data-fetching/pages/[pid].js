@@ -6,9 +6,9 @@ function productDetailPage(props) {
   const { loadedProduct } = props;
 
   // dynamic pre-rendering fallback. when fallback=blocking it's not needed but page takes longer loading time
-  // if (!loadedProduct) {
-  //   return <p>Loading...</p>;
-  // }
+  if (!loadedProduct) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <fragment>
@@ -32,6 +32,11 @@ export async function getStaticProps(context) {
   const data = await getData();
   const product = data.products.find((product) => product.id === productId);
 
+  // if no product 'pid=p4'
+  if (!product) {
+    return { notFound: true };
+  }
+
   return {
     props: {
       loadedProduct: product,
@@ -46,8 +51,8 @@ export async function getStaticPaths() {
   const pathWithParams = ids.map((id) => ({ params: { pid: id } }));
   return {
     paths: pathWithParams,
-    // fallback: true,
-    fallback: "blocking",
+    fallback: true,
+    // fallback: "blocking",
   };
 }
 
